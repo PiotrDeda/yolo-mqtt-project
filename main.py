@@ -35,11 +35,12 @@ if __name__ == '__main__':
         success, frame = cap.read()
         if success:
             results = model(frame, conf=threshold)
-            people_count = sum([1 for label in results[0].names if label == 'person'])
+            label_id = (list(results[0].names))[list(results[0].names.values()).index('person')]
+            people_count = sum([1 for i in results[0].boxes.cls if i == label_id])
             print(f"Detected {people_count} results")
 
             if people_count != prev_people_count:
-                client.publish("people_count", str(people_count))
+                client.publish("yolo/people_count", str(people_count))
                 prev_people_count = people_count
 
             cv2.imshow("YOLO to MQTT", results[0].plot())
