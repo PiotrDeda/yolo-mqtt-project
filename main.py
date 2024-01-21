@@ -20,6 +20,7 @@ if __name__ == '__main__':
     host = os.environ['MQTT_HOST'] if 'MQTT_HOST' in os.environ else config['MQTT']['Host']
     port = int(os.environ['MQTT_PORT']) if 'MQTT_PORT' in os.environ else config['MQTT'].getint('Port')
     camera = config['YOLO'].getint('Camera')
+    wait_time = config['YOLO'].getfloat('WaitTime')
     rapid_mode = config['YOLO'].getboolean('RapidMode')
     preview = config['YOLO'].getboolean('Preview')
     threshold = config['YOLO'].getfloat('Threshold')
@@ -63,7 +64,7 @@ if __name__ == '__main__':
                 prev_people_count = people_count
 
             if prev_people_count > 0 and not rapid_mode:
-                time.sleep(2)
+                time.sleep(wait_time)
         else:
             print("Failed to read frame, shutting down...")
             break
