@@ -11,6 +11,10 @@ def on_connect(client, userdata, flags, rc):
     print(f"Connected to MQTT broker with result code {rc}")
 
 
+def get_label_id(results, label):
+    return (list(results[0].names))[list(results[0].names.values()).index(label)]
+
+
 if __name__ == '__main__':
     # Load config
     config = configparser.ConfigParser()
@@ -47,6 +51,7 @@ if __name__ == '__main__':
 
     # Main detection loop
     prev_people_count = 0
+    prev_animal_count = 0
     while cap.isOpened():
         success, frame = cap.read()
         if success:
@@ -55,13 +60,20 @@ if __name__ == '__main__':
                 cv2.imshow("YOLO to MQTT", results[0].plot())
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
-            label_id = (list(results[0].names))[list(results[0].names.values()).index('person')]
-            people_count = sum([1 for i in results[0].boxes.cls if i == label_id])
-            print(f"Detected {people_count} results")
+            people_label_id = get_label_id(results, 'person')
+            people_count = sum([1 for i in results[0].boxes.cls if i == people_label_id])
+            dog_label_id = get_label_id(results, 'dog')
+            cat_label_id = get_label_id(results, 'cat')
+            animal_count = sum([1 for i in results[0].boxes.cls if i == dog_label_id or i == cat_label_id])
+            print(f"Detected {people_count} people and {animal_count} animals")
 
             if people_count != prev_people_count:
                 client.publish("yolo/people_count", str(people_count))
                 prev_people_count = people_count
+
+            if animal_count != prev_animal_count:
+                client.publish("yolo/animal_count", str(animal_count))
+                prev_animal_count = animal_count
 
             if prev_people_count > 0 and not rapid_mode:
                 time.sleep(wait_time)
